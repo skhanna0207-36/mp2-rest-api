@@ -38,3 +38,27 @@ curl 'http://127.0.0.1:8000/datasets/1?limit=10'
 For the sample fixture, processing removes one invalid numeric row, then removes
 the duplicate and missing-score rows. The remaining student IDs are `1`, `2`, and
 `5`, with scores `80`, `90`, and `85`.
+
+
+## Project structure and runtime notes
+
+- `main.py`: FastAPI application and endpoint handlers.
+- `src/`: API models, request logging middleware, and dataset storage.
+- `data_pipeline/`: data loaders, validation, cleaning, and output helpers.
+- `fixtures/`: small sample CSV used by examples and tests.
+- `tests/`: API integration tests and storage unit tests.
+
+Use Python 3.10 or newer (the code uses built-in generic types and union syntax);
+validation was performed with Python 3.12. Install the pinned dependencies from
+`requirements.txt` before running the test command above.
+
+Datasets live only in the server process's memory. Restarting or reloading the
+server discards uploads, and separate worker processes do not share datasets.
+Run a single worker for this project. The development server has no authentication
+or persistent database and is intended for local assignment use. Keep real
+credentials and private datasets out of the repository; the fixture is sample data.
+
+`limit` must be a positive integer and defaults to 100. Processing replaces the
+stored dataset only after validation and cleaning succeed. Failed processing
+requests leave the previous dataset available. Responses include `X-Request-ID`
+for correlating a request with the server logs.
