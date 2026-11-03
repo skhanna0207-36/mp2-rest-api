@@ -19,3 +19,22 @@ Then open http://127.0.0.1:8000/docs, upload `fixtures/sample_data.csv` and proc
 ```bash
 python -m pytest tests -v
 ```
+
+
+## API example
+
+With the server running, execute these commands from the project root. Replace
+`1` with the `id` returned by the upload if another dataset has already been saved.
+
+```bash
+curl http://127.0.0.1:8000/health
+curl -F 'file=@fixtures/sample_data.csv' http://127.0.0.1:8000/upload
+curl -X POST http://127.0.0.1:8000/datasets/1/process \
+  -H 'Content-Type: application/json' \
+  -d '{"validation":{"required_columns":["student_id","score"],"numeric_columns":["score"]},"processing":{"remove_duplicates":true,"missing":{"enabled":true,"axis":"rows"},"outliers":{"enabled":false}}}'
+curl 'http://127.0.0.1:8000/datasets/1?limit=10'
+```
+
+For the sample fixture, processing removes one invalid numeric row, then removes
+the duplicate and missing-score rows. The remaining student IDs are `1`, `2`, and
+`5`, with scores `80`, `90`, and `85`.
