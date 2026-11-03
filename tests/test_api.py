@@ -188,3 +188,24 @@ def test_invalid_missing_axis(client, uploaded_dataset_id, processing_body):
     response = client.post(url + "/process", json=processing_body)
     assert response.status_code == 400
     assert client.get(url).json() == before
+
+
+
+def test_default_processing(client, uploaded_dataset_id):
+    response = client.post(
+        "/datasets/{}/process".format(uploaded_dataset_id), json={}
+    )
+    assert response.status_code == 200
+    assert response.json()["validation_rows_removed"] == 0
+    assert response.json()["cleaning_report"]["rows_after"] == 4
+
+
+def test_disabled_cleaning_preserves_dataset(client, uploaded_dataset_id):
+    url = "/datasets/{}".format(uploaded_dataset_id)
+    before = client.get(url).json()
+    response = client.post(url + "/process", json={
+        "processing": {"remove_duplicates": False, "missing": {"enabled": False}}
+    })
+    assert response.status_code == 200
+    assert response.json()["cleaning_report"]["rows_removed"] == 0
+    assert client.get(url).json() == before
