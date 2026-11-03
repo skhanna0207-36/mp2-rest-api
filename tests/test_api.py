@@ -154,3 +154,14 @@ def test_invalid_csv_uploads(client):
 def test_upload_requires_file(client):
     response = client.post("/upload")
     assert response.status_code == 422
+
+
+
+def test_missing_numeric_column(client, uploaded_dataset_id, processing_body):
+    url = "/datasets/{}".format(uploaded_dataset_id)
+    before = client.get(url).json()
+    processing_body["validation"]["numeric_columns"] = ["absent"]
+    response = client.post(url + "/process", json=processing_body)
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Numeric column not found: absent"
+    assert client.get(url).json() == before
