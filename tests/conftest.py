@@ -16,7 +16,7 @@ def client():
 
 @pytest.fixture
 def sample_csv_bytes():
-    filepath = Path("fixtures") / "sample_data.csv"
+    filepath = Path(__file__).resolve().parents[1] / "fixtures" / "sample_data.csv"
     return filepath.read_bytes()
 
 
