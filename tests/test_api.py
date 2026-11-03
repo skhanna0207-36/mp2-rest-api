@@ -165,3 +165,26 @@ def test_missing_numeric_column(client, uploaded_dataset_id, processing_body):
     assert response.status_code == 400
     assert response.json()["detail"] == "Numeric column not found: absent"
     assert client.get(url).json() == before
+
+
+
+def test_drop_missing_columns(client, uploaded_dataset_id, processing_body):
+    processing_body["validation"] = {}
+    processing_body["processing"]["missing"]["axis"] = "columns"
+    url = "/datasets/{}".format(uploaded_dataset_id)
+    response = client.post(url + "/process", json=processing_body)
+    assert response.status_code == 200
+    report = response.json()["cleaning_report"]
+    assert report["columns_before"] == 2
+    assert report["columns_after"] == 1
+    assert report["rows_after"] == 5
+    assert all(set(row) == {"student_id"} for row in client.get(url).json()["data"])
+
+
+def test_invalid_missing_axis(client, uploaded_dataset_id, processing_body):
+    url = "/datasets/{}".format(uploaded_dataset_id)
+    before = client.get(url).json()
+    processing_body["processing"]["missing"]["axis"] = "diagonal"
+    response = client.post(url + "/process", json=processing_body)
+    assert response.status_code == 400
+    assert client.get(url).json() == before
