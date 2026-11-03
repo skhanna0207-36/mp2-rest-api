@@ -134,3 +134,23 @@ def test_request_ids(client, uploaded_dataset_id):
 
     # every request should get a different ID
     assert len(set(request_ids)) == len(request_ids)
+
+
+
+def test_invalid_csv_uploads(client):
+    cases = [
+        (b'column\n"unterminated', 400),
+        (b"column\n\xff", 400),
+    ]
+    for contents, expected_status in cases:
+        response = client.post(
+            "/upload", files={"file": ("broken.csv", contents, "text/csv")}
+        )
+        assert response.status_code == expected_status
+        assert "detail" in response.json()
+        assert client.get("/datasets/1").status_code == 404
+
+
+def test_upload_requires_file(client):
+    response = client.post("/upload")
+    assert response.status_code == 422
